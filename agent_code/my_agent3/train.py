@@ -1,3 +1,4 @@
+import json
 import pickle
 import random
 from collections import deque
@@ -14,6 +15,7 @@ from .callbacks import ACTIONS, N_ACTIONS, N_FEATS, encode_feature
 from .model import DQN
 
 MODEL_PATH = Path(__file__).parent / "model.pt"
+STATE_PATH = Path(__file__).parent / "train_state.json"
 
 # ── Hyperparameters ─────────────────────────────────────
 LR              = 1e-3
@@ -76,6 +78,27 @@ def setup_training(self):
     self.steps_done  = 0
     self.round_count = 0
     self.recent_rewards = deque(maxlen=100)
+
+    # BUGFIX (2026-09-06): epsilon/round_count used to always reset here, even
+    # when resuming a checkpoint that had already decayed epsilon way down.
+    # Every time --train 1 was invoked again (e.g. moving to the next
+    # curriculum stage, or just re-running training), the agent would suddenly
+    # start acting ~50% randomly again on top of an already-good policy,
+    # flooding the (size-limited) replay buffer with degraded experience -
+    # found this by accident while running a hyperparameter sweep: even the
+    # "unchanged hyperparameters, just train longer" control run collapsed a
+    # loot-crate score of 573/20 rounds down to 0/20 rounds after 600 more
+    # rounds of "training". Now epsilon/round_count are persisted alongside
+    # model.pt and restored here, so resuming continues the schedule instead
+    # of restarting it. A checkpoint saved before this fix has no
+    # train_state.json yet, so its very next training run will still reset
+    # once - after that, it persists correctly.
+    if STATE_PATH.exists():
+        with open(STATE_PATH) as f:
+            state = json.load(f)
+        self.epsilon     = state.get("epsilon", EPSILON_START)
+        self.round_count = state.get("round_count", 0)
+        self.logger.info(f"Resumed training state: epsilon={self.epsilon:.3f}, round_count={self.round_count}")
 
 
 # ── Custom event detection ──────────────────────────────
@@ -211,4 +234,6 @@ def end_of_round(self, last_state, last_action, events: List[str]):
     if self.round_count % SAVE_EVERY == 0:
         with open(MODEL_PATH, "wb") as f:
             pickle.dump(self.policy_net, f)
-        self.logger.info(f"Saved → {MODEL_PATH}")
+        with open(STATE_PATH, "w") as f:
+            json.dump({"epsilon": self.epsilon, "round_count": self.round_count}, f)
+        self.logger.info(f"Saved → {MODEL_PATH} (epsilon={self.epsilon:.3f}, round_count={self.round_count})")

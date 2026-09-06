@@ -1,3 +1,4 @@
+import json
 import pickle
 import random
 from collections import deque
@@ -15,6 +16,7 @@ from .model import DQN
 from .symmetry import all_symmetries
 
 MODEL_PATH = Path(__file__).parent / "model.pt"
+STATE_PATH = Path(__file__).parent / "train_state.json"
 
 # ── Hyperparameters ───────────────────────────────────────────────
 LR               = 1e-3
@@ -87,8 +89,22 @@ def setup_training(self):
     self.round_count = 0
     self.recent_rewards = deque(maxlen=100)
 
+    # BUGFIX (2026-09-06): same fix as my_agent3/train.py - epsilon/round_count
+    # used to always reset here even when resuming an already-trained
+    # checkpoint, silently reintroducing ~50% random actions every time
+    # --train 1 was invoked again (e.g. moving to the next curriculum stage).
+    # Now persisted alongside model.pt and restored here. A checkpoint saved
+    # before this fix has no train_state.json yet, so its very next training
+    # run will still reset once - after that, it persists correctly.
+    if STATE_PATH.exists():
+        with open(STATE_PATH) as f:
+            state = json.load(f)
+        self.epsilon     = state.get("epsilon", EPSILON_START)
+        self.round_count = state.get("round_count", 0)
+        self.logger.info(f"Resumed training state: epsilon={self.epsilon:.3f}, round_count={self.round_count}")
 
-# ── Custom event detection ─────────────────────────────────────────
+
+# ── Custom event detection ──────────────────────────────
 def _add_custom_events(self, old_state, action, new_state, events: List[str]):
     if old_state is None:
         return
@@ -133,8 +149,24 @@ def _reward(events: List[str]) -> float:
 
 
 # ── Store transitions with symmetry augmentation ──────────────────
+def _store(self, feats, action, reward, feats_next, done):
+    for aug_f, aug_a in all_symmetries(feats, action):
+        aug_fn = np.zeros(N_FEATS, dtype=np.float32) if done else feats_next
+        aug_fn_aug = np.zeros(N_FEATS, dtype=np.float32) if done else \
+                     next(f for f, a in all_symmetries(feats_next, action)
+                          if a == aug_a)   # match same symmetry
+        ai = ACTIONS.index(aug_a)
+        self.memory.append((
+            torch.tensor(aug_f,    dtype=torch.float32),
+            ai,
+            reward,
+            torch.tensor(aug_fn_aug, dtype=torch.float32),
+            done,
+        ))
+
+
 def _store_simple(self, feats, action, reward, feats_next, done):
-    """Store all 12 symmetries (rotations/flips) of a transition in replay memory."""
+    """Faster version: store all 12 symmetries without next-state re-augmentation."""
     next_f = np.zeros(N_FEATS, dtype=np.float32) if (done or feats_next is None) else feats_next
     for aug_f, aug_a in all_symmetries(feats, action):
         ai = ACTIONS.index(aug_a)
@@ -221,7 +253,7 @@ def end_of_round(self, last_state, last_action, events: List[str]):
     if self.epsilon > EPSILON_MIN:
         self.epsilon *= EPSILON_DECAY
 
-    total_r = reward   # single-step reward at end; full episode sum not tracked here
+    total_r = reward  # single-step reward at end; full episode sum not tracked here
     self.recent_rewards.append(total_r)
     self.round_count += 1
 
@@ -233,6 +265,8 @@ def end_of_round(self, last_state, last_action, events: List[str]):
     if self.round_count % SAVE_EVERY == 0:
         with open(MODEL_PATH, "wb") as f:
             pickle.dump(self.policy_net, f)
-        self.logger.info(f"Saved → {MODEL_PATH}")
+        with open(STATE_PATH, "w") as f:
+            json.dump({"epsilon": self.epsilon, "round_count": self.round_count}, f)
+        self.logger.info(f"Saved → {MODEL_PATH} (epsilon={self.epsilon:.3f}, round_count={self.round_count})")
 
     self.position_history.clear()

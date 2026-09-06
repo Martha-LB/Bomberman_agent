@@ -1,3 +1,4 @@
+import json
 import os
 import numpy as np
 import torch
@@ -12,8 +13,9 @@ import events as e
 # always save relative to this file, not the cwd
 AGENT_DIR = Path(__file__).parent
 MODEL_PATH = AGENT_DIR / "model.pt"
+STATE_PATH = AGENT_DIR / "train_state.json"
 
-# ── Hyperparameters ───────────────────────────────────────────────
+# ── Hyperparameters ────────────────────────────────────────────
 LR              = 3e-4
 GAMMA           = 0.99      # discount factor
 GAE_LAMBDA      = 0.95      # GAE smoothing
@@ -32,7 +34,7 @@ EPSILON_DECAY = 0.9998
 SAVE_EVERY      = 100       # save model every N rounds
 
 
-# ── Reward shaping ────────────────────────────────────────────────
+# ── Reward shaping ───────────────────────────────────────────────
 def shape_reward(events_list, old_state, new_state, action_history=[]):
     reward = 0.0
 
@@ -74,7 +76,7 @@ def _coin_proximity_delta(old_state, new_state):
     return 0.3 * delta   # 0.1 → 0.3
 
 
-# ── PPO rollout buffer ────────────────────────────────────────────
+# ── PPO rollout buffer ───────────────────────────────────────────
 class RolloutBuffer:
     def __init__(self):
         self.clear()
@@ -104,7 +106,7 @@ class RolloutBuffer:
         return advantages, returns
 
 
-# ── setup_training ────────────────────────────────────────────────
+# ── setup_training ───────────────────────────────────────────────
 def setup_training(self):
     # self.device and self.model are already set by callbacks.setup(), which runs
     # first and loads MODEL_PATH if it exists. Re-creating self.model here used to
@@ -118,6 +120,22 @@ def setup_training(self):
     # tracking
     self.episode_rewards = []
     self.recent_rewards  = deque(maxlen=100)
+
+    # BUGFIX (2026-09-06): same fix as my_agent2/my_agent3's train.py - epsilon
+    # (here, the exploration-override on top of PPO's own action-prob argmax,
+    # see callbacks.act()) and round_count used to always reset here even when
+    # resuming a checkpoint whose exploration had already decayed way down, so
+    # every re-invocation of --train 1 (e.g. moving to the next curriculum
+    # stage) silently reintroduced heavy randomness on top of an already-good
+    # policy. Now persisted alongside model.pt and restored here. A checkpoint
+    # saved before this fix has no train_state.json yet, so its very next
+    # training run will still reset once - after that, it persists correctly.
+    if STATE_PATH.exists():
+        with open(STATE_PATH) as f:
+            state = json.load(f)
+        self.epsilon     = state.get("epsilon", EPSILON_START)
+        self.round_count = state.get("round_count", 0)
+        self.logger.info(f"Resumed training state: epsilon={self.epsilon:.3f}, round_count={self.round_count}")
 
     self.logger.info(f"Training on {self.device}")
 
@@ -149,7 +167,7 @@ def game_events_occurred(self, old_game_state, self_action, new_game_state, even
     )
 
 
-# ── end_of_round ──────────────────────────────────────────────────
+# ── end_of_round ────────────────────────────────────────────────
 def end_of_round(self, last_game_state, last_action, events):
     # handle last transition
     game_events_occurred(self, last_game_state, last_action, None, events)
@@ -194,7 +212,9 @@ def end_of_round(self, last_game_state, last_action, events):
     # save
     if self.round_count % SAVE_EVERY == 0:
         torch.save(self.model.state_dict(), MODEL_PATH)
-        self.logger.info(f"Model saved at round {self.round_count} → {MODEL_PATH}")
+        with open(STATE_PATH, "w") as f:
+            json.dump({"epsilon": self.epsilon, "round_count": self.round_count}, f)
+        self.logger.info(f"Model saved at round {self.round_count} → {MODEL_PATH} (epsilon={self.epsilon:.3f})")
 
 
 # ── PPO update step ───────────────────────────────────────────────
