@@ -1,0 +1,138 @@
+{
+    "by_agent": {
+        "my_agent3": {
+            "bombs": 387,
+            "coins": 573,
+            "crates": 1514,
+            "invalid": 6,
+            "moves": 7133,
+            "rounds": 20,
+            "score": 573,
+            "steps": 7566,
+            "suicides": 2,
+            "time": 38.093438148498535
+        }
+    },
+    "by_round": {
+        "eval_my_agent3_lootcrate | Round 01 (2026-09-06 11-41-00)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 02 (2026-09-06 11-41-02)": {
+            "coins": 36,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 03 (2026-09-06 11-41-04)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 04 (2026-09-06 11-41-06)": {
+            "coins": 31,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 05 (2026-09-06 11-41-08)": {
+            "coins": 42,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 06 (2026-09-06 11-41-10)": {
+            "coins": 42,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 07 (2026-09-06 11-41-12)": {
+            "coins": 45,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 08 (2026-09-06 11-41-14)": {
+            "coins": 42,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 09 (2026-09-06 11-41-16)": {
+            "coins": 30,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 10 (2026-09-06 11-41-18)": {
+            "coins": 25,
+            "kills": 0,
+            "steps": 182,
+            "suicides": 1
+        },
+        "eval_my_agent3_lootcrate | Round 11 (2026-09-06 11-41-19)": {
+            "coins": 36,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 12 (2026-09-06 11-41-22)": {
+            "coins": 21,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 13 (2026-09-06 11-41-24)": {
+            "coins": 34,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 14 (2026-09-06 11-41-26)": {
+            "coins": 28,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 15 (2026-09-06 11-41-28)": {
+            "coins": 22,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 16 (2026-09-06 11-41-30)": {
+            "coins": 31,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 17 (2026-09-06 11-41-32)": {
+            "coins": 40,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 18 (2026-09-06 11-41-34)": {
+            "coins": 30,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 19 (2026-09-06 11-41-37)": {
+            "coins": 4,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent3_lootcrate | Round 20 (2026-09-06 11-41-38)": {
+            "coins": 25,
+            "kills": 0,
+            "steps": 184,
+            "suicides": 1
+        }
+    }
+}

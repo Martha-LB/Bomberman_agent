@@ -1,0 +1,136 @@
+{
+    "by_agent": {
+        "my_agent2": {
+            "bombs": 1,
+            "crates": 2,
+            "invalid": 6391,
+            "moves": 1605,
+            "rounds": 20,
+            "score": 0,
+            "steps": 7999,
+            "time": 65.80884671211243
+        }
+    },
+    "by_round": {
+        "eval_my_agent2_lootcrate | Round 01 (2026-09-06 11-39-44)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 02 (2026-09-06 11-39-49)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 03 (2026-09-06 11-39-53)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 04 (2026-09-06 11-39-56)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 05 (2026-09-06 11-40-00)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 06 (2026-09-06 11-40-03)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 07 (2026-09-06 11-40-07)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 08 (2026-09-06 11-40-10)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 09 (2026-09-06 11-40-14)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 10 (2026-09-06 11-40-17)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 11 (2026-09-06 11-40-21)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 12 (2026-09-06 11-40-25)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 13 (2026-09-06 11-40-28)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 14 (2026-09-06 11-40-31)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 15 (2026-09-06 11-40-34)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 16 (2026-09-06 11-40-37)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 17 (2026-09-06 11-40-40)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 18 (2026-09-06 11-40-42)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 19 (2026-09-06 11-40-46)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_lootcrate | Round 20 (2026-09-06 11-40-49)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        }
+    }
+}

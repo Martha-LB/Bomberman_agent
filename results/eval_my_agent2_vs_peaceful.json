@@ -1,0 +1,145 @@
+{
+    "by_agent": {
+        "my_agent2": {
+            "bombs": 2,
+            "crates": 4,
+            "invalid": 6403,
+            "moves": 1214,
+            "rounds": 20,
+            "score": 0,
+            "steps": 7619,
+            "suicides": 1,
+            "time": 69.06507158279419
+        },
+        "peaceful_agent": {
+            "invalid": 5140,
+            "moves": 2860,
+            "rounds": 20,
+            "score": 0,
+            "steps": 8000,
+            "time": 0.9378972053527832
+        }
+    },
+    "by_round": {
+        "eval_my_agent2_vs_peaceful | Round 01 (2026-09-06 11-41-41)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 02 (2026-09-06 11-41-45)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 03 (2026-09-06 11-41-48)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 04 (2026-09-06 11-41-51)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 05 (2026-09-06 11-41-54)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 06 (2026-09-06 11-41-57)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 07 (2026-09-06 11-42-01)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 08 (2026-09-06 11-42-04)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 09 (2026-09-06 11-42-08)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 10 (2026-09-06 11-42-12)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 11 (2026-09-06 11-42-15)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 12 (2026-09-06 11-42-19)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 13 (2026-09-06 11-42-23)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 14 (2026-09-06 11-42-27)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 15 (2026-09-06 11-42-32)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 16 (2026-09-06 11-42-36)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 17 (2026-09-06 11-42-40)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 18 (2026-09-06 11-42-45)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 19 (2026-09-06 11-42-50)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_peaceful | Round 20 (2026-09-06 11-42-53)": {
+            "coins": 0,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 1
+        }
+    }
+}

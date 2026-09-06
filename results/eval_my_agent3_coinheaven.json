@@ -1,0 +1,314 @@
+{
+    "by_agent": {
+        "my_agent3": {
+            "coins": 2500,
+            "moves": 7387,
+            "rounds": 50,
+            "score": 2500,
+            "steps": 7387,
+            "time": 71.00484251976013
+        }
+    },
+    "by_round": {
+        "eval_my_agent3_coinheaven | Round 01 (2026-08-30 19-20-40)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 154,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 02 (2026-08-30 19-20-41)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 145,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 03 (2026-08-30 19-20-43)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 146,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 04 (2026-08-30 19-20-44)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 118,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 05 (2026-08-30 19-20-46)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 149,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 06 (2026-08-30 19-20-47)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 149,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 07 (2026-08-30 19-20-48)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 146,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 08 (2026-08-30 19-20-50)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 153,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 09 (2026-08-30 19-20-51)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 163,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 10 (2026-08-30 19-20-53)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 159,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 11 (2026-08-30 19-20-55)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 148,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 12 (2026-08-30 19-20-56)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 156,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 13 (2026-08-30 19-20-58)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 134,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 14 (2026-08-30 19-20-59)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 150,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 15 (2026-08-30 19-21-01)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 143,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 16 (2026-08-30 19-21-02)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 151,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 17 (2026-08-30 19-21-03)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 139,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 18 (2026-08-30 19-21-05)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 170,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 19 (2026-08-30 19-21-06)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 116,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 20 (2026-08-30 19-21-08)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 141,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 21 (2026-08-30 19-21-09)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 139,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 22 (2026-08-30 19-21-10)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 135,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 23 (2026-08-30 19-21-12)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 160,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 24 (2026-08-30 19-21-13)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 163,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 25 (2026-08-30 19-21-15)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 147,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 26 (2026-08-30 19-21-16)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 149,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 27 (2026-08-30 19-21-18)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 141,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 28 (2026-08-30 19-21-19)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 143,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 29 (2026-08-30 19-21-21)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 154,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 30 (2026-08-30 19-21-22)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 157,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 31 (2026-08-30 19-21-24)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 145,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 32 (2026-08-30 19-21-25)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 166,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 33 (2026-08-30 19-21-27)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 146,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 34 (2026-08-30 19-21-28)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 141,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 35 (2026-08-30 19-21-30)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 145,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 36 (2026-08-30 19-21-31)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 155,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 37 (2026-08-30 19-21-32)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 170,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 38 (2026-08-30 19-21-34)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 152,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 39 (2026-08-30 19-21-36)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 155,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 40 (2026-08-30 19-21-37)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 151,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 41 (2026-08-30 19-21-39)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 137,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 42 (2026-08-30 19-21-40)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 143,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 43 (2026-08-30 19-21-42)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 130,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 44 (2026-08-30 19-21-43)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 138,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 45 (2026-08-30 19-21-45)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 132,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 46 (2026-08-30 19-21-46)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 159,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 47 (2026-08-30 19-21-47)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 155,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 48 (2026-08-30 19-21-49)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 149,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 49 (2026-08-30 19-21-50)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 141,
+            "suicides": 0
+        },
+        "eval_my_agent3_coinheaven | Round 50 (2026-08-30 19-21-52)": {
+            "coins": 50,
+            "kills": 0,
+            "steps": 159,
+            "suicides": 0
+        }
+    }
+}

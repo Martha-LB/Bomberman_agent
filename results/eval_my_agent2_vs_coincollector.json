@@ -1,0 +1,152 @@
+{
+    "by_agent": {
+        "coin_collector_agent": {
+            "bombs": 726,
+            "coins": 156,
+            "crates": 2288,
+            "invalid": 38,
+            "kills": 3,
+            "moves": 7103,
+            "rounds": 20,
+            "score": 171,
+            "steps": 7867,
+            "suicides": 2,
+            "time": 6.600203514099121
+        },
+        "my_agent2": {
+            "bombs": 27,
+            "coins": 3,
+            "crates": 15,
+            "invalid": 4385,
+            "kills": 1,
+            "moves": 2045,
+            "rounds": 20,
+            "score": 8,
+            "steps": 6567,
+            "suicides": 5,
+            "time": 112.79129242897034
+        }
+    },
+    "by_round": {
+        "eval_my_agent2_vs_coincollector | Round 01 (2026-09-06 11-43-41)": {
+            "coins": 8,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 02 (2026-09-06 11-43-49)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 03 (2026-09-06 11-43-56)": {
+            "coins": 6,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 1
+        },
+        "eval_my_agent2_vs_coincollector | Round 04 (2026-09-06 11-44-02)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 05 (2026-09-06 11-44-10)": {
+            "coins": 8,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 06 (2026-09-06 11-44-15)": {
+            "coins": 7,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 1
+        },
+        "eval_my_agent2_vs_coincollector | Round 07 (2026-09-06 11-44-24)": {
+            "coins": 6,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 08 (2026-09-06 11-44-31)": {
+            "coins": 8,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 09 (2026-09-06 11-44-39)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 10 (2026-09-06 11-44-47)": {
+            "coins": 6,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 11 (2026-09-06 11-44-55)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 1
+        },
+        "eval_my_agent2_vs_coincollector | Round 12 (2026-09-06 11-44-57)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 13 (2026-09-06 11-45-04)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 14 (2026-09-06 11-45-13)": {
+            "coins": 7,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 1
+        },
+        "eval_my_agent2_vs_coincollector | Round 15 (2026-09-06 11-45-16)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 16 (2026-09-06 11-45-21)": {
+            "coins": 8,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 17 (2026-09-06 11-45-29)": {
+            "coins": 8,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 1
+        },
+        "eval_my_agent2_vs_coincollector | Round 18 (2026-09-06 11-45-31)": {
+            "coins": 7,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 0
+        },
+        "eval_my_agent2_vs_coincollector | Round 19 (2026-09-06 11-45-36)": {
+            "coins": 8,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 1
+        },
+        "eval_my_agent2_vs_coincollector | Round 20 (2026-09-06 11-45-41)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 1
+        }
+    }
+}
