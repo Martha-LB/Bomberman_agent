@@ -1,0 +1,358 @@
+{
+    "by_agent": {
+        "my_agent_planning": {
+            "bombs": 1158,
+            "coins": 169,
+            "crates": 1809,
+            "invalid": 111,
+            "kills": 13,
+            "moves": 14047,
+            "rounds": 50,
+            "score": 234,
+            "steps": 15415,
+            "suicides": 12,
+            "time": 170.71322202682495
+        },
+        "rule_based_agent_0": {
+            "bombs": 1063,
+            "coins": 102,
+            "crates": 1506,
+            "invalid": 362,
+            "kills": 6,
+            "moves": 11209,
+            "rounds": 50,
+            "score": 132,
+            "steps": 12649,
+            "suicides": 23,
+            "time": 12.108511686325073
+        },
+        "rule_based_agent_1": {
+            "bombs": 972,
+            "coins": 86,
+            "crates": 1454,
+            "invalid": 354,
+            "kills": 9,
+            "moves": 10885,
+            "rounds": 50,
+            "score": 131,
+            "steps": 12217,
+            "suicides": 25,
+            "time": 11.479276895523071
+        },
+        "rule_based_agent_2": {
+            "bombs": 1053,
+            "coins": 93,
+            "crates": 1401,
+            "invalid": 359,
+            "kills": 5,
+            "moves": 11171,
+            "rounds": 50,
+            "score": 118,
+            "steps": 12603,
+            "suicides": 28,
+            "time": 11.169907093048096
+        }
+    },
+    "by_round": {
+        "vs_rulebased_planning_seed31415 | Round 01 (2026-09-14 08-25-07)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 02 (2026-09-14 08-25-12)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 334,
+            "suicides": 3
+        },
+        "vs_rulebased_planning_seed31415 | Round 03 (2026-09-14 08-25-17)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 343,
+            "suicides": 3
+        },
+        "vs_rulebased_planning_seed31415 | Round 04 (2026-09-14 08-25-21)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 05 (2026-09-14 08-25-25)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 06 (2026-09-14 08-25-30)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 07 (2026-09-14 08-25-35)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 312,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 08 (2026-09-14 08-25-39)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 09 (2026-09-14 08-25-44)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 10 (2026-09-14 08-25-45)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 11 (2026-09-14 08-25-47)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 12 (2026-09-14 08-25-53)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 13 (2026-09-14 08-25-55)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 14 (2026-09-14 08-25-59)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 15 (2026-09-14 08-26-05)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 16 (2026-09-14 08-26-11)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 17 (2026-09-14 08-26-16)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 18 (2026-09-14 08-26-21)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 258,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 19 (2026-09-14 08-26-22)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 20 (2026-09-14 08-26-28)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 267,
+            "suicides": 3
+        },
+        "vs_rulebased_planning_seed31415 | Round 21 (2026-09-14 08-26-29)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 22 (2026-09-14 08-26-34)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 235,
+            "suicides": 3
+        },
+        "vs_rulebased_planning_seed31415 | Round 23 (2026-09-14 08-26-38)": {
+            "coins": 9,
+            "kills": 2,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 24 (2026-09-14 08-26-43)": {
+            "coins": 9,
+            "kills": 2,
+            "steps": 400,
+            "suicides": 0
+        },
+        "vs_rulebased_planning_seed31415 | Round 25 (2026-09-14 08-26-48)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 26 (2026-09-14 08-26-53)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 27 (2026-09-14 08-26-58)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 28 (2026-09-14 08-27-03)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 29 (2026-09-14 08-27-04)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 0
+        },
+        "vs_rulebased_planning_seed31415 | Round 30 (2026-09-14 08-27-10)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 0
+        },
+        "vs_rulebased_planning_seed31415 | Round 31 (2026-09-14 08-27-16)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 32 (2026-09-14 08-27-20)": {
+            "coins": 9,
+            "kills": 2,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 33 (2026-09-14 08-27-25)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 297,
+            "suicides": 3
+        },
+        "vs_rulebased_planning_seed31415 | Round 34 (2026-09-14 08-27-27)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 290,
+            "suicides": 3
+        },
+        "vs_rulebased_planning_seed31415 | Round 35 (2026-09-14 08-27-29)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 36 (2026-09-14 08-27-34)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 37 (2026-09-14 08-27-39)": {
+            "coins": 9,
+            "kills": 2,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 38 (2026-09-14 08-27-43)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 39 (2026-09-14 08-27-48)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 40 (2026-09-14 08-27-53)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 41 (2026-09-14 08-27-55)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 42 (2026-09-14 08-27-57)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 225,
+            "suicides": 3
+        },
+        "vs_rulebased_planning_seed31415 | Round 43 (2026-09-14 08-27-59)": {
+            "coins": 9,
+            "kills": 2,
+            "steps": 400,
+            "suicides": 1
+        },
+        "vs_rulebased_planning_seed31415 | Round 44 (2026-09-14 08-28-04)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 45 (2026-09-14 08-28-09)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 46 (2026-09-14 08-28-14)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 47 (2026-09-14 08-28-20)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 48 (2026-09-14 08-28-25)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 346,
+            "suicides": 3
+        },
+        "vs_rulebased_planning_seed31415 | Round 49 (2026-09-14 08-28-26)": {
+            "coins": 9,
+            "kills": 1,
+            "steps": 400,
+            "suicides": 2
+        },
+        "vs_rulebased_planning_seed31415 | Round 50 (2026-09-14 08-28-32)": {
+            "coins": 9,
+            "kills": 0,
+            "steps": 400,
+            "suicides": 2
+        }
+    }
+}

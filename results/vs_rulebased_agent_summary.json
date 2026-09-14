@@ -1,0 +1,32 @@
+{
+  "description": "Head-to-head evaluation: does our agent beat rule_based_agent? Uses main.py's own designated comparison (--my-agent flag: 1 of our agents vs 3 built-in rule_based_agent instances), classic scenario, 50 rounds per run, across 5 independent fixed seeds per agent (250 rounds total per agent). Run 2026-09-14.",
+  "verdict": "Yes, consistently. Both my_agent3 and my_agent_planning beat all three rule_based_agent opponents' scores in every one of the 5 seeds tested (5/5, no losses). Average total score is roughly 1.8x the best-performing rule_based_agent in the same match.",
+  "my_agent3": {
+    "per_seed": [
+      {"seed": 101, "score": 291, "best_rule_based_score": 140, "suicides": 10, "kills": 22, "coins": 181},
+      {"seed": 2024, "score": 276, "best_rule_based_score": 149, "suicides": 7, "kills": 17, "coins": 191},
+      {"seed": 31415, "score": 268, "best_rule_based_score": 128, "suicides": 7, "kills": 17, "coins": 183},
+      {"seed": 42, "score": 234, "best_rule_based_score": 155, "suicides": 12, "kills": 14, "coins": 164},
+      {"seed": 777, "score": 257, "best_rule_based_score": 152, "suicides": 8, "kills": 17, "coins": 172}
+    ],
+    "wins": "5/5 seeds",
+    "score_mean": 265.2,
+    "score_min": 234,
+    "score_max": 291
+  },
+  "my_agent_planning": {
+    "per_seed": [
+      {"seed": 101, "score": 274, "best_rule_based_score": 142, "suicides": 8, "kills": 19, "coins": 179},
+      {"seed": 2024, "score": 241, "best_rule_based_score": 161, "suicides": 5, "kills": 16, "coins": 161},
+      {"seed": 31415, "score": 234, "best_rule_based_score": 132, "suicides": 12, "kills": 13, "coins": 169},
+      {"seed": 42, "score": 245, "best_rule_based_score": 118, "suicides": 17, "kills": 18, "coins": 155},
+      {"seed": 777, "score": 295, "best_rule_based_score": 147, "suicides": 6, "kills": 22, "coins": 185}
+    ],
+    "wins": "5/5 seeds",
+    "score_mean": 257.8,
+    "score_min": 234,
+    "score_max": 295
+  },
+  "why_it_wins": "Compared to the built-in rule_based_agent (3 instances per match), our agents consistently show a lower suicide rate (roughly 5-17 per 50 rounds vs rule_based_agent's own 19-30 per 50 rounds seen in the same matches), more kills, and more coins collected. The win is not from rule_based_agent's mistakes alone - our agent is both safer and more effective.",
+  "caveats": "(1) Tested only in the classic scenario - the same agents' loot-crate-only performance (see hyperparam_sweep2_controlled_summary.json) shows a much higher self-destruction rate (~1.7-2.25 suicides/round) in that harder, bomb-dense scenario, so the classic-scenario win margin should not be assumed to hold in every scenario mix a grader might use. (2) 5 seeds is a solid sample for a course deadline but not exhaustive - an adversarial or unusual seed could still produce a bad round. (3) Both agents share my_agent3's underlying network and features, so this is not yet evidence that my_agent (PPO) or my_agent2 beat rule_based_agent - those were not part of this test."
+}

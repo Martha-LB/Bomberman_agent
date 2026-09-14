@@ -117,3 +117,7 @@ replays/
 results/*
 !results/*.json
 !results/.gitkeep
+!results/percall/
+!results/percall/*.json
+!results/percall_summary.txt
+!results/percall_table_sem_format.txt
