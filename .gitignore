@@ -112,3 +112,4 @@ screenshots/*.webm
 
 replays/
 results/
+agent_code/rivalguarddqn/training_state.pt
