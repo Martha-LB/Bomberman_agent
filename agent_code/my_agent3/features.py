@@ -306,16 +306,28 @@ class Feature:
 
     # ── detect kill opportunity ────────────────────────────
     def _is_chance_to_kill(self) -> bool:
-        s0 = copy.deepcopy(self.game_state)
-        s1 = self._predict_next(self.game_state['self'][-1])
-        s1['bombs'] = copy.deepcopy(self.game_state['bombs'])
-        s1['bombs'].append((self.game_state['self'][-1], s.BOMB_TIMER - 1))
-        for i in range(len(s1['others'])):
+        my_pos = self.game_state['self'][-1]
+
+        # Escape check must run on the state AFTER our hypothetical bomb exists,
+        # not on the current board (which has no bomb on it yet). _is_safe_to_drop
+        # already does this correctly, so reuse it instead of re-deriving it here.
+        # This is independent of which opponent we're checking, so compute once.
+        if not self._is_safe_to_drop(my_pos):
+            return False
+
+        for i in range(len(self.game_state['others'])):
+            # Fresh copies every iteration: s0/s1 get a self<->other[i] swap below,
+            # and reusing copies across iterations would leave iteration i-1's swap
+            # in place, corrupting the check for every opponent after the first.
+            s0 = copy.deepcopy(self.game_state)
+            s1 = self._predict_next(my_pos)
+            s1['bombs'] = copy.deepcopy(self.game_state['bombs'])
+            s1['bombs'].append((my_pos, s.BOMB_TIMER - 1))
+
             s0['self'], s0['others'][i] = s0['others'][i], s0['self']
             s1['self'], s1['others'][i] = s1['others'][i], s1['self']
             if (sum(self._find_safe_positions(s0)) != 0 and
-                sum(self._find_safe_positions(s1)) == 0 and
-                self._find_safe_positions(self.game_state)[-1]):
+                sum(self._find_safe_positions(s1)) == 0):
                 return True
         return False
 
