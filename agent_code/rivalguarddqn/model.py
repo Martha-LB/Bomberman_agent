@@ -52,7 +52,7 @@ def save_model(
             for key, value in policy_net.state_dict().items()
         },
         "config": {
-            "agent": "my_agent",
+            "agent": "rivalguarddqn",
             "feature_version": FEATURE_VERSION,
         },
     }
@@ -76,7 +76,7 @@ def load_model(
     """Load a native Feature V16 model without legacy migration."""
     payload = _torch_load(Path(path))
     if not isinstance(payload, dict) or "policy_state_dict" not in payload:
-        raise ValueError(f"{path} is not a my_agent model file.")
+        raise ValueError(f"{path} is not a RivalGuard DQN model file.")
     if payload.get("format_version") != MODEL_FORMAT_VERSION:
         raise ValueError(
             f"Unsupported model format: {payload.get('format_version')}"
@@ -87,7 +87,7 @@ def load_model(
     if feature_version != FEATURE_VERSION:
         raise ValueError(
             f"Model feature version {feature_version} is incompatible; "
-            f"my_agent requires Feature V{FEATURE_VERSION}."
+            f"RivalGuard DQN requires Feature V{FEATURE_VERSION}."
         )
 
     policy_state = dict(payload["policy_state_dict"])
@@ -95,7 +95,7 @@ def load_model(
     if model_width != n_observations:
         raise ValueError(
             f"Model input width {model_width} is incompatible with "
-            f"my_agent width {n_observations}."
+            f"RivalGuard DQN width {n_observations}."
         )
 
     policy_net = DQN(n_observations, n_actions).to(device)

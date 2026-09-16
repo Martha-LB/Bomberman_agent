@@ -1,4 +1,4 @@
-"""Compact Double-DQN training for ``my_agent``.
+"""Compact Double-DQN training for ``rivalguarddqn``.
 
 The submitted policy is already stored in ``model.pt``.  This module contains
 only the learning loop needed to train the same network: uniform current-stage

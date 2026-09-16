@@ -145,7 +145,7 @@ def setup(self):
 
     if not MODEL_PATH.is_file():
         raise FileNotFoundError(
-            f"No my_agent model found at {MODEL_PATH}."
+            f"No RivalGuard DQN model found at {MODEL_PATH}."
         )
 
     self.policy_net = load_model(
@@ -153,7 +153,7 @@ def setup(self):
     )
     self.policy_net.eval()
     self.logger.info(
-        f"Loaded my_agent model {MODEL_PATH} (DQN + OASF)"
+        f"Loaded RivalGuard DQN model {MODEL_PATH} (DQN + OASF)"
     )
 
 

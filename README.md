@@ -16,9 +16,9 @@ The framework is provided by [ukoethe/bomberman_rl](https://github.com/ukoethe/b
 ## Repository Structure
 
 ```
-bomberman_rl/
+bomberman/
 ├── agent_code/               # all agents live here
-│   ├── my_agent3/            ← my final submission
+│   ├── rivalguarddqn/        ← final submission
 │   ├── rule_based_agent/     ← framework baseline
 │   ├── random_agent/         ← framework baseline
 │   └── ...
@@ -32,19 +32,19 @@ bomberman_rl/
 └── compare_agents.py         # visualization script for agent comparison
 ```
 
-## My Agent: `my_agent3`
+## Final Agent: `rivalguarddqn`
 
-Uses a **Dueling DQN** on top of hand-engineered 34-dim features. The features encode BFS pathfinding results, danger maps, and a rule-based "best target" hint — so the network only needs to learn tactical trade-offs, not perception.
+RivalGuard DQN uses a **Dueling Double DQN** with 108 state and action-consequence features. These features describe coins, crates, opponents, danger timing, escape capacity, recent movement, and coin competition. An Opponent-Aware Safety Filter removes invalid or provably fatal actions; the learned Q-network ranks the remaining actions.
 
-See [`agent_code/my_agent3/README.md`](agent_code/my_agent3/README.md) for the full design.
+See [`agent_code/rivalguarddqn/README.md`](agent_code/rivalguarddqn/README.md) for the full design.
 
 ## Key Findings So Far
 
-- **Feature engineering matters more than algorithm choice.** A well-designed 34-dim feature with Q-learning outperforms a naive DQN on raw pixels.
-- **BFS with danger awareness is essential.** Without it, the agent cannot reliably distinguish "safe path" from "walkable path".
-- **Symmetry augmentation (12×) is a free win.** The map is symmetric under rotation and reflection; each transition can teach the network 12 variants.
-- **Reward shaping needs care.** Sparse framework events (`COIN_COLLECTED`, `KILLED_SELF`) aren't enough. Custom events like `MOVE_TO_TARGET` and `MOVE_TO_DEAD`, informed by the rule engine, are what let the agent learn quickly.
-- **Curriculum learning helps.** Training progressively (`coin-heaven` → `loot-crate` → `classic`) is more stable than throwing the full scenario at a fresh agent.
+- **Action-consequence features are more useful than a hand-written target action.** The network learns how to trade off coins, crates, combat, and safety.
+- **Time-aware escape search matters.** A tile can be walkable now but still lead to a forced death several steps later.
+- **D4 symmetry augmentation improves data efficiency.** Rotations and reflections teach equivalent board situations together.
+- **Potential-based reward shaping provides dense feedback while keeping the game score as the main objective.**
+- **Curriculum training with replay rehearsal helps retain earlier skills.**
 
 ## Quick Start
 
@@ -57,17 +57,19 @@ pip install torch numpy matplotlib pygame tqdm
 
 **Train:**
 ```bash
-python main.py play --agents my_agent --train 1 --scenario coin-heaven --no-gui --n-rounds 1000
+MY_AGENT_STAGE=P1 MY_AGENT_FRESH=1 \
+python main.py play --agents rivalguarddqn curriculum_agent curriculum_agent curriculum_agent \
+  --train 1 --scenario classic --no-gui --n-rounds 600
 ```
 
 **Play (with GUI):**
 ```bash
-python main.py play --agents my_agent rule_based_agent --scenario classic
+python main.py play --agents rivalguarddqn rule_based_agent --scenario classic
 ```
 
 **Evaluate against opponents:**
 ```bash
-python main.py play --agents my_agent rule_based_agent random_agent peaceful_agent \
+python main.py play --agents rivalguarddqn rule_based_agent random_agent peaceful_agent \
     --scenario classic --no-gui --n-rounds 100 --save-stats
 ```
 
@@ -78,7 +80,7 @@ python compare_agents.py results/<latest>.json
 
 **Save a replay:**
 ```bash
-python main.py play --agents my_agent3 --scenario classic --n-rounds 1 --save-replay
+python main.py play --agents rivalguarddqn --scenario classic --n-rounds 1 --save-replay
 python main.py replay replays/<file>.pt
 ```
 

@@ -1,4 +1,4 @@
-# my_agent
+# RivalGuard DQN
 
 `RivalGuard DQN` is a dueling Double DQN agent for the classic Bomberman scenario.
 It uses a learned policy together with an Opponent-Aware Safety Filter (OASF).
@@ -52,7 +52,7 @@ python evaluate_agents.py \
   --rounds 100 \
   --runs 3 \
   --seed 40000 \
-  --output results/eval_my_agent_r100x3_seed40000.json
+  --output results/eval_rivalguarddqn_r100x3_seed40000.json
 ```
 
 The saved model produced the following result in this evaluation:
