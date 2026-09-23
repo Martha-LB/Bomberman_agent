@@ -4,10 +4,13 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 import numpy as np
 import settings as s
 
+from .safe import safety_filter, contested_lethal_moves
 
-DIRECTIONS = [(0, -1), (1, 0), (0, 1), (-1, 0)]  # UP, RIGHT, DOWN, LEFT
-DIRECTIONS_WAIT = DIRECTIONS + [(0, 0)]
 
+DIRECTIONS = [(0, -1), (1, 0), (0, 1), (-1, 0)] # UP, RIGHT, DOWN, LEFT
+DIRECTIONS_WAIT = DIRECTIONS + [(0, 0)] # Add WAIT
+
+# Some Parameters
 HORIZON = 8
 SAFE_SPACE_CLIP = 10
 MOTION_HISTORY_LENGTH = 4
@@ -17,7 +20,7 @@ COIN_BUDGET = 9
 TWO_STEP_THREAT_RADIUS = s.BOMB_POWER + 2
 
 TILE_TYPES = (
-    "free",
+    "free", # normal empty place
     "wall",
     "crate",
     "bomb",
@@ -27,9 +30,7 @@ TILE_TYPES = (
 )
 TILE_INDEX = {name: index for index, name in enumerate(TILE_TYPES)}
 
-# Feature V16 appends coin competition to the stable V15 103-value layout.
-# Every encoded input is a direct state measurement or a one-action
-# consequence; multi-step Beam Search is deliberately excluded.
+# The model uses 108 values from these features :
 #   tiles       5 categorical values -> 5 * 7 one-hot = 35
 #   valid       6 action flags                         =  6
 #   danger_eta  5 normalized time-to-danger values    =  5
@@ -42,27 +43,31 @@ TILE_INDEX = {name: index for index, name in enumerate(TILE_TYPES)}
 #   bomb        5 immediate bomb opportunity values     =  5
 #   global      8 strategic state values               =  8
 #   recent_visit 5 recency values for move/WAIT         =  5
-#   motion_history 4 * (dx, dy) actual displacements   =  8
+#   motion_history 4 * (dx, dy) actual displacements   =  8  dont think it works
 #   coin_contest 5 own-vs-enemy visible-coin margins    =  5
+
+
 N_FEATS = 108
 SCORE_SCALE = 20.0
 COIN_CONTEST_MARGIN_CLIP = 8.0
 
 
 class Feature:
-    """Build a Feature V16 representation."""
+    """Build the state features used by the DQN."""
 
     def __init__(self, use_opponent_safety_filter=True):
         self.use_opponent_safety_filter = bool(use_opponent_safety_filter)
+
+        # Build the map
         walls = np.zeros((s.COLS, s.ROWS), dtype=np.int8)
         walls[:1, :] = walls[-1:, :] = -1
         walls[:, :1] = walls[:, -1:] = -1
         for x in range(s.COLS):
             for y in range(s.ROWS):
-                if (x + 1) * (y + 1) % 2 == 1:
+                if x % 2 == 0 and y % 2 == 0:
                     walls[x, y] = -1
-        # This environment lets blasts pass through crates; only walls stop
-        # them. Precompute the resulting static blast relation once.
+        # Blast areas depend only on fixed stone walls, so compute them once here
+        # For each bomb, which cells would be influenced
         n_cells = s.COLS * s.ROWS
         self.bomb_impact = np.zeros((n_cells, n_cells), dtype=np.int8)
         self.blast_cells: Dict[Tuple[int, int], Tuple[Tuple[int, int], ...]] = {}
@@ -73,7 +78,9 @@ class Feature:
                     continue
 
                 cells = [(x, y)]
+                # Compute 1d index
                 origin_index = x * s.ROWS + y
+                # Bomb impact Map
                 self.bomb_impact[origin_index, origin_index] = 1
                 for dx, dy in DIRECTIONS:
                     for distance in range(1, s.BOMB_POWER + 1):
@@ -97,11 +104,15 @@ class Feature:
         self._motion_history = deque(maxlen=MOTION_HISTORY_LENGTH)
         self._pending_action: Optional[str] = None
         self._pending_position: Optional[Tuple[int, int]] = None
+        # The scores of all agents at last step
         self._observed_scores: Dict[str, int] = {}
+        # The total coins already obtained for now
         self._coins_collected_estimate = 0
+        # The score of the best opponent
         self._max_observed_opponent_score = 0.0
 
-    def _reset_temporal_state(self, round_number: int) -> None:
+    def _reset_state(self, round_number: int) -> None:
+        # Forget old round
         self._tracked_round = round_number
         self._own_bomb_position = None
         self._recent_positions.clear()
@@ -113,74 +124,69 @@ class Feature:
         self._max_observed_opponent_score = 0.0
 
     def _refresh_round_memory(self, state: Dict) -> None:
-        """Track public score changes to estimate how many coins remain.
-
-        In this environment a player can collect at most one coin per step,
-        while every kill is worth exactly five points.  Consecutive public
-        score observations therefore identify a coin gain as ``delta % 5``,
-        including a coin and one or more kills occurring in the same step.
-        Remembering the largest observed opponent score also prevents a dead
-        high-scoring opponent from disappearing from the score comparison.
-        """
+        # Start clean for a new round
         round_number = int(state["round"])
         if self._tracked_round != round_number:
-            self._reset_temporal_state(round_number)
+            self._reset_state(round_number)
 
         own_name = str(state["self"][0])
         for agent in [state["self"], *state["others"]]:
             name = str(agent[0])
-            score = int(round(float(agent[1])))
+            score = int(agent[1])
             previous = self._observed_scores.get(name)
             if previous is not None and score > previous:
+                # Five points is a kill, rest is coins
                 score_delta = score - previous
                 self._coins_collected_estimate += score_delta % s.REWARD_KILL
-            self._observed_scores[name] = max(score, previous or 0)
+            self._observed_scores[name] = score
             if name != own_name:
                 self._max_observed_opponent_score = max(
                     self._max_observed_opponent_score,
-                    float(score),
+                    score,
                 )
 
+        # In case too large
         self._coins_collected_estimate = min(
             self._coins_collected_estimate,
             COIN_BUDGET,
         )
 
     def note_action(self, state: Dict, action: str) -> None:
-        """Remember the location of our bomb without changing the game API.
-
-        The framework exposes bomb positions and timers, but not bomb owners.
-        Each agent may own only one active bomb, so remembering a successful
-        BOMB command is sufficient to recover ownership in later states.
-        """
         if not state:
             return
         round_number = int(state["round"])
         if self._tracked_round != round_number:
-            self._reset_temporal_state(round_number)
+            self._reset_state(round_number)
         position = tuple(state["self"][-1])
+        # Save this before the game runs the action
         self._pending_action = action
         self._pending_position = position
         self._recent_positions.append(position)
+
         if action == "BOMB" and bool(state["self"][2]):
+            # Only one own bomb can exist
             self._own_bomb_position = position
 
     def _refresh_bomb_tracking(self, state: Dict) -> None:
+        """Record the last movement and remove finished own bombs."""
         round_number = int(state["round"])
         if self._tracked_round != round_number:
-            self._reset_temporal_state(round_number)
+            self._reset_state(round_number)
             return
 
         if self._pending_action is not None and self._pending_position is not None:
+            # Compare wanted move with real move
             current = tuple(state["self"][-1])
             dx = current[0] - self._pending_position[0]
             dy = current[1] - self._pending_position[1]
             motion = (dx, dy) if (dx, dy) in DIRECTIONS else (0, 0)
             self._motion_history.append(motion)
+
             self._pending_action = None
             self._pending_position = None
 
         bomb_positions = {tuple(position) for position, _ in state["bombs"]}
+        # Bomb gone means it already exploded
         if (
             self._own_bomb_position is not None
             and self._own_bomb_position not in bomb_positions
@@ -191,12 +197,8 @@ class Feature:
         self,
         position: Tuple[int, int],
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """Encode exact short motion history and candidate-cell recency.
-
-        The finite motion history is part of the augmented agent state.  It is
-        therefore available to the policy whenever recency-dependent shaping
-        is used, rather than hiding reward-relevant history from the learner.
-        """
+        # Return recent visits and the last four movements
+        # How recently each next tile was visited
         recent_visit = np.zeros(5, dtype=np.float32)
         history = list(self._recent_positions)
         for action_index, candidate in enumerate(self._action_positions(position)):
@@ -207,6 +209,7 @@ class Feature:
                     ) / MOTION_HISTORY_LENGTH
                     break
 
+        # Put newest movement at the end
         motion_history = np.zeros((MOTION_HISTORY_LENGTH, 2), dtype=np.float32)
         motions = list(self._motion_history)
         offset = MOTION_HISTORY_LENGTH - len(motions)
@@ -216,14 +219,8 @@ class Feature:
 
     @staticmethod
     def _state_cache_key(state: Dict) -> Tuple:
-        """Return a collision-safe signature of every feature-relevant value.
-
-        The framework gives the state before an action and the state after the
-        action the same (round, step) pair. Using only those two counters would
-        therefore make the training callback reuse the old feature as the next
-        feature. The arrays are tiny (17 x 17), so including their bytes is much
-        cheaper than recomputing the BFS-based feature while remaining exact.
-        """
+        # Build an exact cache key for one game state
+        # Round and step alone are not enough during training
         self_state = state["self"]
         self_key = (
             self_state[0],
@@ -241,6 +238,7 @@ class Feature:
         )
         coins_key = tuple(tuple(position) for position in state["coins"])
 
+        # Bytes also catch crate and flame changes
         return (
             int(state["round"]),
             int(state["step"]),
@@ -252,20 +250,23 @@ class Feature:
             state["explosion_map"].tobytes(),
         )
 
-    # ── Time-indexed danger model ─────────────────────────
+    # Time-indexed danger model
     def _hazard_schedule(self, state: Dict, horizon: int = HORIZON) -> np.ndarray:
-        """Return hazard[t, x, y] for t=0..horizon."""
+        """Mark dangerous tiles for every future step."""
+        # One danger map for each future step
         hazard = np.zeros(
             (horizon + 1, s.COLS, s.ROWS),
             dtype=bool,
         )
 
+        # Flames already on the board
         explosion_map = state["explosion_map"]
         for x, y in np.argwhere(explosion_map > 0):
             remaining = int(np.ceil(explosion_map[x, y]))
             hazard[0, x, y] = True
             hazard[1:min(horizon, remaining) + 1, x, y] = True
 
+        # Future bomb flames
         for bomb_position, timer in state["bombs"]:
             explosion_step = int(timer) + 1
             first = max(1, explosion_step)
@@ -278,6 +279,8 @@ class Feature:
         return hazard
 
     def _crate_clear_times(self, state: Dict, horizon: int) -> np.ndarray:
+        # Return the step when each crate will be destroyed
+        # Horizon + 1 means not destroyed in our search
         clear_time = np.full((s.COLS, s.ROWS), horizon + 1, dtype=np.int16)
         field = state["field"]
         for bomb_position, timer in state["bombs"]:
@@ -289,14 +292,15 @@ class Feature:
                     clear_time[x, y] = min(clear_time[x, y], explosion_step)
         return clear_time
 
-    # ── Safe movement search ─────────────────────────────
+    # Safe movement search
     def _survival_search(
         self,
         state: Dict,
         max_steps: int = HORIZON,
         hazard: Optional[np.ndarray] = None,
     ) -> Tuple[List[int], np.ndarray]:
-        """Return safe endpoints and longest survival for every first action."""
+        # Count safe endpoints and survival steps for each first action
+        # Prepare all changes during the next eight steps
         field = state["field"]
         bombs = state["bombs"]
         start_x, start_y = state["self"][-1]
@@ -312,11 +316,13 @@ class Feature:
             tuple(other[-1]) for other in state.get("others", ())
         }
 
+        # Keep results separate for UP RIGHT DOWN LEFT WAIT
         safe_endpoints = [set() for _ in range(5)]
         longest = np.zeros(5, dtype=np.int16)
         queue = deque([(start_x, start_y, 0, -1)])
         visited = {(start_x, start_y, 0, -1)}
 
+        # Search position and time together
         while queue:
             x, y, time_step, first_action = queue.popleft()
             if time_step == max_steps:
@@ -336,21 +342,17 @@ class Feature:
                 if tile == 1 and clear_time[nx, ny] > next_time:
                     continue
 
-                # A player may wait on the bomb underneath them, but cannot
-                # re-enter a bomb tile after leaving it.
+                # The agent may wait on its bomb but cannot re-enter it.
                 release = bomb_release.get((nx, ny))
                 if release is not None and next_time < release and (nx, ny) != (x, y):
                     continue
                 if hazard[next_time, nx, ny]:
                     continue
-                # Current occupancy is certain for the first move.  Ignoring
-                # it here made the survival BFS count routes through an enemy
-                # even though the physical action mask rejected that move.
-                # Do not block later times: predicting where an enemy will be
-                # several turns from now would be an unjustified hard prune.
+                # Only current enemy positions are known with certainty.
                 if next_time == 1 and (nx, ny) in enemy_now:
                     continue
 
+                # Remember which first action reached this path
                 first = action_index if first_action < 0 else first_action
                 if next_time > longest[first]:
                     longest[first] = next_time
@@ -369,15 +371,8 @@ class Feature:
         enabled: Sequence[bool],
         max_steps: int = HORIZON,
     ) -> np.ndarray:
-        """Return whether each labelled start has an eight-step safe path.
-
-        This is the second ply of the local adversarial check.  A single
-        enemy destination creates one hazard schedule, so all five possible
-        positions reached by our first action share a vectorized reachability
-        search instead of repeating an identical BFS five times.  Only binary
-        survival is needed here: capacity is still measured by the ordinary
-        safety feature, while hard pruning asks solely whether death is forced.
-        """
+        # Check several start positions in one escape search
+        # Each label is one possible first action
         field = state["field"]
         hazard = self._hazard_schedule(state, max_steps)
         clear_time = self._crate_clear_times(state, max_steps)
@@ -393,14 +388,14 @@ class Feature:
             if enabled[label] and not hazard[0, start[0], start[1]]:
                 reachable[label, start[0], start[1]] = True
 
+        # Move all labels one step at the same time
         for next_time in range(1, max_steps + 1):
             walkable = (field != -1) & (
                 (field != 1) | (clear_time <= next_time)
             )
             safe_destination = walkable & ~hazard[next_time]
 
-            # WAIT may remain on the bomb underneath the agent, whereas a
-            # movement action cannot enter any unreleased bomb tile.
+            # Waiting may stay on a bomb. movement may not enter one.
             next_reachable = reachable & safe_destination[None, :, :]
             movable_destination = safe_destination.copy()
             for position, release in bomb_release.items():
@@ -417,13 +412,15 @@ class Feature:
 
         return reachable.reshape(len(starts), -1).any(axis=1)
 
-    # ── Static strategic maps ─────────────────────────────
+    # Static strategic maps
     @staticmethod
     def _distance_map(field: np.ndarray, targets: Iterable[Tuple[int, int]]) -> np.ndarray:
+        # Find the shortest walking distance to the nearest target
         unreachable = s.COLS * s.ROWS
         distance = np.full(field.shape, unreachable, dtype=np.int16)
         queue = deque()
 
+        # Search backwards from every target
         for x, y in set(targets):
             if field[x, y] == 0:
                 distance[x, y] = 0
@@ -447,7 +444,8 @@ class Feature:
         field: np.ndarray,
         excluded: Iterable[Tuple[int, int]] = (),
     ) -> np.ndarray:
-        """Count crates hit from each free bomb tile, excluding prior claims."""
+        # Count new crates hit by a bomb on each free tile
+        # Matrix gives all blast cells for every bomb position
         crate_vector = (field == 1).astype(np.int16).flatten()
         for position in excluded:
             crate_vector[position[0] * s.ROWS + position[1]] = 0
@@ -462,13 +460,10 @@ class Feature:
         self,
         state: Dict,
     ) -> Dict[Tuple[int, int], Tuple[int, int, Tuple[int, int]]]:
-        """Map every doomed crate to its first (time, order, bomb position).
-
-        The engine processes equal-timer bombs in list order. Including that
-        order avoids crediting two bombs for the same crate.
-        """
+        # Assign each doomed crate to the bomb that reaches it first
         field = state["field"]
         claims: Dict[Tuple[int, int], Tuple[int, int, Tuple[int, int]]] = {}
+        # Earlier bomb gets the crate
         for order, (bomb_position, timer) in enumerate(state["bombs"]):
             position = tuple(bomb_position)
             explosion_step = int(timer) + 1
@@ -486,9 +481,10 @@ class Feature:
         claims: Dict[Tuple[int, int], Tuple[int, int, Tuple[int, int]]],
         hidden_coin_probability: float,
     ) -> float:
-        """Estimate coins revealed by the tracked bomb, discounted by timer."""
+        # Estimate the future coin value of our active bomb
         if self._own_bomb_position is None:
             return 0.0
+        # Late crates have less value now
         discounted_crates = sum(
             FUTURE_CRATE_DISCOUNT ** explosion_step
             for explosion_step, _, owner_position in claims.values()
@@ -505,12 +501,8 @@ class Feature:
         claims: Dict[Tuple[int, int], Tuple[int, int, Tuple[int, int]]],
         hidden_coin_probability: float,
     ) -> np.ndarray:
-        """Estimate coin yield at the bomb location after each first action.
-
-        Crates already scheduled to be destroyed by an active bomb are not
-        counted again.  A crate is valuable only through its current estimated
-        probability of hiding a still-unrevealed coin.
-        """
+        # Estimate the crate value after each move or WAIT
+        # Check bomb value at every next position
         values = np.zeros(5, dtype=np.float32)
         for action_index, position in enumerate(positions):
             if not physical_valid[action_index] or field[position] != 0:
@@ -525,6 +517,8 @@ class Feature:
 
     @staticmethod
     def _normalized_distance(distance: np.ndarray, position: Tuple[int, int]) -> float:
+        # Scale one distance to the range from zero to one
+        # One means far away or unreachable
         value = int(distance[position])
         if value >= s.COLS * s.ROWS:
             return 1.0
@@ -536,13 +530,8 @@ class Feature:
         positions: Sequence[Tuple[int, int]],
         valid: np.ndarray,
     ) -> np.ndarray:
-        """Return signed distance improvement for move/WAIT actions.
-
-        Positive values move closer to the target set, negative values move
-        farther away, and zero means no change or no reachable target. The
-        network, rather than this feature extractor, decides how to trade off
-        coins, crates, enemies, and safety.
-        """
+        # Measure whether each move gets closer to the target
+        # Positive means closer, negative means farther
         unreachable = distance.shape[0] * distance.shape[1]
         current = int(distance[positions[4]])
         deltas = np.zeros(5, dtype=np.float32)
@@ -574,15 +563,7 @@ class Feature:
         action_positions: Sequence[Tuple[int, int]],
         physical_valid: np.ndarray,
     ) -> np.ndarray:
-        """Return per-action arrival margins for the same visible coin.
-
-        Each movement/WAIT action targets its nearest reachable visible coin.
-        The value is ``own arrival - nearest enemy arrival``: negative means
-        that we are favoured to collect it, while positive means that an enemy
-        is likely to arrive first. Equal-distance coins are resolved in favour
-        of the least contested option. The already executed first action is
-        included in our arrival time, so simultaneous one-step races are ties.
-        """
+        """Compare our arrival time to the nearest enemy's arrival time."""
         values = np.zeros(5, dtype=np.float32)
         coin_positions = [tuple(coin) for coin in coins]
         if not coin_positions:
@@ -590,6 +571,7 @@ class Feature:
 
         unreachable = field.shape[0] * field.shape[1]
         has_enemies = bool(enemy_positions)
+        # Each action may lead to a different best coin
         for action_index, action_position in enumerate(action_positions):
             if not physical_valid[action_index]:
                 continue
@@ -605,6 +587,7 @@ class Feature:
                 coin for coin in reachable
                 if int(own_distance[coin]) == own_after
             ]
+            # If same distance, prefer the coin less useful to enemies
             target = max(
                 nearest,
                 key=lambda coin: int(enemy_distance[coin]),
@@ -621,12 +604,14 @@ class Feature:
             )
         return values
 
-    # ── Lightweight one-step simulation ──────────────────────
+    # Lightweight one-step simulation
     def _predict_next(
         self,
         state: Dict,
         bomb_drop: Optional[Tuple[int, int]] = None,
     ) -> Dict:
+        # Advance bombs and explosions by one step
+        # Copy arrays because old state must stay unchanged
         next_state = dict(state)
         next_state["field"] = state["field"].copy()
         next_state["explosion_map"] = np.maximum(
@@ -634,6 +619,7 @@ class Feature:
             0,
         )
 
+        # Explode ready bombs and tick the others
         remaining_bombs = []
         for bomb_position, timer in state["bombs"]:
             if timer <= 0:
@@ -647,6 +633,7 @@ class Feature:
             else:
                 remaining_bombs.append((bomb_position, int(timer) - 1))
 
+        # Add a possible new bomb
         if bomb_drop is not None:
             remaining_bombs.append((bomb_drop, s.BOMB_TIMER - 1))
         next_state["bombs"] = remaining_bombs
@@ -654,6 +641,8 @@ class Feature:
 
     @staticmethod
     def _state_from_enemy_perspective(state: Dict, enemy: Sequence) -> Dict:
+        # View the same state from one enemy's position
+        # Make this enemy the self agent
         enemy_state = dict(state)
         enemy_state["self"] = enemy
         enemy_state["others"] = [
@@ -663,10 +652,12 @@ class Feature:
         return enemy_state
 
     def _trapped_enemy_count(self, state: Dict, post_drop_state: Dict) -> int:
+        # Count enemies that lose every escape after our bomb is added
         bomb_position = state["self"][-1]
         blast = set(self.blast_cells[bomb_position])
         trapped = 0
 
+        # Only enemies inside this blast can be trapped by it
         for enemy in state["others"]:
             if enemy[-1] not in blast:
                 continue
@@ -679,19 +670,23 @@ class Feature:
                 trapped += 1
         return trapped
 
-    # ── Feature groups ───────────────────────────────────
+    # Feature groups
     @staticmethod
     def _action_positions(position: Tuple[int, int]) -> List[Tuple[int, int]]:
+        # Return the four move destinations and the current tile
+        # Order must match the action list
         x, y = position
         return [(x + dx, y + dy) for dx, dy in DIRECTIONS_WAIT]
 
     def _tile_features(self, state: Dict) -> np.ndarray:
+        # Describe the four nearby tiles and the current tile
         field = state["field"]
         explosion_map = state["explosion_map"]
         bomb_positions = {position for position, _ in state["bombs"]}
         enemy_positions = {other[-1] for other in state["others"]}
         coin_positions = set(state["coins"])
 
+        # Use one tile type for each position
         tiles = []
         for x, y in self._action_positions(state["self"][-1]):
             if field[x, y] == -1:
@@ -712,12 +707,12 @@ class Feature:
         return np.asarray(tiles, dtype=np.int8)
 
     def _valid_actions(self, state: Dict) -> np.ndarray:
+        # Mark actions that are physically possible now.
         field = state["field"]
-        # Treat current agent occupancy as blocked. Although execution order is
-        # random and an opponent may move away first, relying on that race was
-        # a major source of invalid actions and repeated collision attempts.
+        # Current bombs and enemies block movement.
         blocked = {tuple(position) for position, _ in state["bombs"]}
         blocked.update(tuple(other[-1]) for other in state["others"])
+        # Movement needs a free unblocked tile
         valid = np.zeros(6, dtype=np.float32)
         for action_index, position in enumerate(
             self._action_positions(state["self"][-1])[:4]
@@ -734,6 +729,8 @@ class Feature:
         state: Dict,
         hazard: np.ndarray,
     ) -> np.ndarray:
+        # Return when each nearby tile first becomes dangerous
+        # Minus one means no danger in our horizon
         eta = np.full(5, -1.0, dtype=np.float32)
         for action_index, (x, y) in enumerate(
             self._action_positions(state["self"][-1])
@@ -753,6 +750,8 @@ class Feature:
         extra_bombs: Sequence[Tuple[Tuple[int, int], int]] = (),
         escape_details: Optional[Dict[str, int]] = None,
     ) -> np.ndarray:
+        # Describe the value and safety of dropping a bomb now
+        # What this bomb can hit
         position = state["self"][-1]
         available = bool(state["self"][2])
         blast = set(self.blast_cells[position])
@@ -762,6 +761,7 @@ class Feature:
         escape_options = 0
         robust_escape_options = 0
         trapped_enemies = 0
+        # Simulate the bomb only when dropping is possible
         if available and not hazard[1, position[0], position[1]]:
             post_drop_state = self._predict_next(state, bomb_drop=position)
             occupied = {tuple(pos) for pos, _ in post_drop_state["bombs"]}
@@ -771,14 +771,28 @@ class Feature:
                 for pos, timer in extra_bombs
                 if tuple(pos) not in occupied
             )
+            # Count ways to leave after dropping
             safe_after_drop, _ = self._survival_search(post_drop_state)
             escape_options = sum(count > 0 for count in safe_after_drop)
             post_drop_physical = self._valid_actions(post_drop_state)
-            contested_after_drop = self._contested_lethal_moves(
-                post_drop_state,
+            post_drop_enemy_destinations = (
+                {
+                    enemy_position
+                    for enemy in post_drop_state["others"]
+                    for enemy_position in self._enemy_first_positions(
+                        post_drop_state, enemy
+                    )
+                }
+                if int(safe_after_drop[4]) == 0
+                else set()
+            )
+            contested_after_drop = contested_lethal_moves(
                 post_drop_physical,
                 safe_after_drop,
+                self._action_positions(tuple(post_drop_state["self"][-1])),
+                post_drop_enemy_destinations,
             )
+            # Remove escape moves an enemy can block
             robust_escape_options = sum(
                 count > 0 and not contested_after_drop[action_index]
                 for action_index, count in enumerate(safe_after_drop)
@@ -786,6 +800,7 @@ class Feature:
             safe_to_drop = escape_options > 0
             if safe_to_drop and enemies_hit:
                 trapped_enemies = self._trapped_enemy_count(state, post_drop_state)
+        # OASF also needs the raw action counts
         if escape_details is not None:
             escape_details.update({
                 "raw_actions": int(escape_options),
@@ -793,10 +808,7 @@ class Feature:
             })
 
         max_enemies = max(1, s.MAX_AGENTS - 1)
-        # Availability is already represented by valid[BOMB], while the old
-        # safe_to_drop flag was exactly equivalent to escape_options > 0.
-        # Entries 1 and 4 describe expected coin revelation rather than raw
-        # crate destruction.  This keeps bombing instrumental to real score.
+        # Crate value is based on expected hidden coins.
         immediate_expected_coins = (
             hidden_coin_probability * float(crate_counts[position])
         )
@@ -818,7 +830,8 @@ class Feature:
         self,
         state: Dict,
     ) -> List[Tuple[Tuple[int, int], int]]:
-        """Return one concurrent immediate-drop hypothesis per opponent."""
+        # Assume each ready enemy may drop a bomb now
+        # One simple worst case for every enemy
         occupied = {tuple(position) for position, _ in state["bombs"]}
         return [
             (tuple(other[-1]), s.BOMB_TIMER)
@@ -831,7 +844,8 @@ class Feature:
         state: Dict,
         enemy: Sequence,
     ) -> List[Tuple[int, int]]:
-        """Enumerate physical move/WAIT destinations for one enemy."""
+        # Return the tiles an enemy can occupy next
+        # Bombs and agents block the enemy too
         field = state["field"]
         origin = tuple(enemy[-1])
         blocked = {tuple(position) for position, _ in state["bombs"]}
@@ -860,18 +874,12 @@ class Feature:
         physical_valid: np.ndarray,
         base_safe_counts: Sequence[int],
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """Find nearby single-enemy bomb plans that force a dead end.
-
-        For every current movement/WAIT action, enumerate one bomb-ready
-        enemy's physically possible first move followed by BOMB.  The plan is
-        considered forcing only if *all* of our physical second responses have
-        zero eight-step escape capacity.  Immediate concurrent enemy bombs are
-        checked as well.  Enemies are considered one at a time to avoid the
-        unrealistic coordinated worst case that previously caused jitter.
-        """
+        # Check whether one nearby enemy can force a dead end
+        # Start with safety from known bombs
         worst_capacity = np.asarray(base_safe_counts, dtype=np.int32).copy()
         forced_death = np.zeros(5, dtype=bool)
         own_position = tuple(state["self"][-1])
+        # Far enemies cannot affect this short search
         nearby_enemies = [
             enemy
             for enemy in state["others"]
@@ -885,8 +893,7 @@ class Feature:
 
         occupied_bombs = {tuple(position) for position, _ in state["bombs"]}
 
-        # Enemy BOMB on the current turn.  Timer BOMB_TIMER is correct before
-        # the concurrent action; the environment decrements it after actions.
+        # First check an enemy bomb dropped now.
         for enemy in nearby_enemies:
             enemy_position = tuple(enemy[-1])
             if enemy_position in occupied_bombs:
@@ -905,10 +912,7 @@ class Feature:
                 & (counts == 0)
             )
 
-        # Enemy MOVE/WAIT now and BOMB on the following turn.  For one enemy
-        # bomb destination, a labelled multi-start BFS evaluates every one of
-        # our current first actions together.  A plan is forcing only when no
-        # subsequent movement/WAIT sequence reaches a safe horizon endpoint.
+        # Then check an enemy move followed by a bomb next turn.
         next_base = self._predict_next(state)
         next_bombs = {tuple(position) for position, _ in next_base["bombs"]}
         self_positions = self._action_positions(own_position)
@@ -954,119 +958,47 @@ class Feature:
 
         return worst_capacity, forced_death
 
-    def _contested_lethal_moves(
-        self,
-        state: Dict,
-        physical_valid: np.ndarray,
-        safe_counts: Sequence[int],
-    ) -> np.ndarray:
-        """Flag escape moves whose execution failure removes every escape.
-
-        Agents choose simultaneously but move in a random execution order. If
-        an opponent can enter the same destination first, our movement may be
-        converted into an implicit WAIT.  Such a contested move is not a
-        reliable escape when the WAIT branch has no full-horizon safe path.
-        Unlike checking only the next hazard frame, this detects collisions
-        that leave us alive for a turn or two but too late to clear a blast.
-        """
-        contested_lethal = np.zeros(5, dtype=bool)
-        origin = tuple(state["self"][-1])
-        if int(safe_counts[4]) > 0:
-            return contested_lethal
-
-        enemy_destinations = {
-            position
-            for enemy in state["others"]
-            for position in self._enemy_first_positions(state, enemy)
-        }
-        for action_index, destination in enumerate(
-            self._action_positions(origin)[:4]
-        ):
-            contested_lethal[action_index] = bool(
-                physical_valid[action_index]
-                and destination in enemy_destinations
-            )
-        return contested_lethal
-
-    @staticmethod
-    def _safety_mask(
-        physical_valid: np.ndarray,
-        safe_counts: Sequence[int],
-        bomb_escape_options: float,
-    ) -> np.ndarray:
-        mask = np.asarray(physical_valid, dtype=np.float32).copy()
-        mask[:5] *= np.asarray(safe_counts, dtype=np.float32) > 0
-        mask[5] *= float(bomb_escape_options > 0.0)
-        return mask
-
-    @staticmethod
-    def _select_action_mask(
-        physical_valid: np.ndarray,
-        base_valid: np.ndarray,
-        robust_valid: Optional[np.ndarray] = None,
-        survival_steps: Optional[Sequence[int]] = None,
-        immediate_safe: Optional[Sequence[bool]] = None,
-    ) -> np.ndarray:
-        """Prefer robust actions and use a non-bomb longest-life fallback."""
-        if robust_valid is not None and robust_valid.any():
-            return np.asarray(robust_valid, dtype=np.float32)
-
-        if base_valid.any():
-            # When all known-safe actions are opponent-contested, retain the
-            # movement choices because no guaranteed alternative exists.  A
-            # BOMB rejected by the robustness check must not be reintroduced.
-            fallback = np.asarray(base_valid, dtype=np.float32).copy()
-            if robust_valid is not None and not robust_valid[5]:
-                fallback[5] = 0.0
-            if fallback.any():
-                return fallback
-            return np.asarray(base_valid, dtype=np.float32)
-
-        # No action reaches the full deterministic horizon.  Never add a new
-        # bomb in this state; retain only the physical move/WAIT actions with
-        # the longest known-safe prefix.
-        fallback = np.zeros(6, dtype=np.float32)
-        physical_movement = np.asarray(physical_valid[:5], dtype=bool)
-        if immediate_safe is not None:
-            hazard_safe = np.asarray(immediate_safe, dtype=bool)
-            if np.any(physical_movement & hazard_safe):
-                physical_movement &= hazard_safe
-        if survival_steps is None:
-            fallback[:5] = physical_movement
-        else:
-            depths = np.asarray(survival_steps, dtype=np.int16)
-            best_depth = int(np.max(depths[physical_movement]))
-            fallback[:5] = physical_movement & (depths == best_depth)
-        if not fallback.any():
-            fallback[4] = 1.0
-        return fallback
-
-    # ── Public API ────────────────────────────────────────
     def __call__(self, game_state: Dict) -> Dict[str, np.ndarray]:
+        """Build every feature group for one game state."""
+        # No state before and after a round
         if game_state is None:
             return {}
 
+        # Update score memory
         self._refresh_round_memory(game_state)
+
+        # Same state gives same features
         cache_key = self._state_cache_key(game_state)
         if cache_key == self._cache_key and self._cache_value is not None:
             return self._cache_value
 
+        # Record real movement and own bomb
         self._refresh_bomb_tracking(game_state)
 
+        # Build danger map
         field = game_state["field"]
         position = game_state["self"][-1]
         hazard = self._hazard_schedule(game_state)
+
+        # Search eight steps from every first action
         safe_counts, survival_steps = self._survival_search(
             game_state,
             hazard=hazard,
         )
+
+        # Clip large counts before giving them to DQN
         safe_space = np.minimum(safe_counts, SAFE_SPACE_CLIP).astype(np.float32)
         safe_space /= SAFE_SPACE_CLIP
 
+        # Actions possible without safety check
         physical_valid = self._valid_actions(game_state)
+
+        # Do not count crates already claimed by another bomb
         claims = self._scheduled_crate_claims(game_state)
         crate_counts = self._crate_counts(field, excluded=claims)
         crate_targets = [tuple(cell) for cell in np.argwhere(crate_counts > 0)]
+
+        # Estimate how many coins still exist
         remaining_coin_count = max(
             0,
             COIN_BUDGET - self._coins_collected_estimate,
@@ -1075,6 +1007,8 @@ class Feature:
             0,
             remaining_coin_count - len(game_state["coins"]),
         )
+
+        # Chance that one crate hides a coin
         remaining_crate_count = int(np.count_nonzero(field == 1))
         hidden_coin_probability = (
             min(hidden_coin_count / remaining_crate_count, 1.0)
@@ -1082,6 +1016,7 @@ class Feature:
         )
         remaining_coin_fraction = remaining_coin_count / COIN_BUDGET
 
+        # Shortest distance to coins, useful crates and enemies
         coin_distance = self._distance_map(field, game_state["coins"])
         crate_distance = self._distance_map(field, crate_targets)
         enemy_distance = self._distance_map(
@@ -1089,8 +1024,10 @@ class Feature:
             [other[-1] for other in game_state["others"]],
         )
 
+        # Enemy may drop a bomb now
         possible_enemy_bombs = self._pessimistic_enemy_bombs(game_state)
 
+        # Value and escape of our new bomb
         bomb_escape_details: Dict[str, int] = {}
         bomb = self._bomb_features(
             game_state,
@@ -1100,10 +1037,7 @@ class Feature:
             hidden_coin_probability,
             escape_details=bomb_escape_details,
         )
-        # Opponent hypotheses remain soft critic/DQN inputs unless a local
-        # two-step plan proves one first action forced-dead while a robust
-        # alternative exists.  The opponent-aware safety filter is not a
-        # blanket worst-case mask over every possible enemy action.
+        # Enemy bomb now or after one move
         pessimistic_safe_counts, enemy_forced_death = self._two_step_enemy_threats(
             game_state,
             physical_valid,
@@ -1113,6 +1047,7 @@ class Feature:
         pessimistic_robust_bomb_actions = bomb_escape_details.get(
             "robust_actions", 0
         )
+        # Keep the worst bomb escape result
         for enemy_bomb in possible_enemy_bombs:
             enemy_position, enemy_timer = enemy_bomb
             enemy_bomb_escape_details: Dict[str, int] = {}
@@ -1122,7 +1057,7 @@ class Feature:
                 hazard,
                 claims,
                 hidden_coin_probability,
-                # _bomb_features first advances our own new bomb one step.
+                # Simulated state already one step ahead
                 extra_bombs=[(enemy_position, enemy_timer - 1)],
                 escape_details=enemy_bomb_escape_details,
             )
@@ -1135,62 +1070,50 @@ class Feature:
                 enemy_bomb_escape_details.get("robust_actions", 0),
             )
 
-        base_valid = self._safety_mask(
-            physical_valid,
-            safe_counts,
-            bomb[0],
-        )
+        # Position after UP RIGHT DOWN LEFT WAIT
         action_positions = self._action_positions(position)
+
+        # Safe now and in next step
         immediate_safe = np.asarray([
             not hazard[0, action_position[0], action_position[1]]
             and not hazard[1, action_position[0], action_position[1]]
             for action_position in action_positions
         ], dtype=bool)
-        if self.use_opponent_safety_filter:
-            robust_valid = base_valid.copy()
-            robust_valid[:5] *= ~enemy_forced_death
-            contested_lethal = self._contested_lethal_moves(
-                game_state,
-                physical_valid,
-                safe_counts,
-            )
-            robust_valid[:5] *= ~contested_lethal
-
-            nearby_bomb_ready_enemy = any(
-                bool(enemy[2])
-                and abs(enemy[-1][0] - position[0])
-                + abs(enemy[-1][1] - position[1])
-                <= TWO_STEP_THREAT_RADIUS
+        # Enemy collision matters when WAIT has no escape
+        enemy_destinations = (
+            {
+                enemy_position
                 for enemy in game_state["others"]
-            )
-            robust_bomb = pessimistic_robust_bomb_actions > 0
-            if nearby_bomb_ready_enemy:
-                robust_bomb &= pessimistic_robust_bomb_actions >= 2
-            robust_valid[5] *= float(robust_bomb)
-
-            valid = self._select_action_mask(
-                physical_valid,
-                base_valid,
-                robust_valid,
-                survival_steps,
-                immediate_safe,
-            )
-        else:
-            # Training deliberately exposes the DQN to the full deterministic
-            # known-hazard action set. Deployment adds opponent-aware pruning.
-            valid = (
-                base_valid
-                if base_valid.any()
-                else self._select_action_mask(
-                    physical_valid,
-                    base_valid,
-                    survival_steps=survival_steps,
-                    immediate_safe=immediate_safe,
+                for enemy_position in self._enemy_first_positions(
+                    game_state, enemy
                 )
-            )
-
-        # Even if every action is threatened and the hard mask must recover,
-        # the critic still receives the worst response capacity as a feature.
+            }
+            if self.use_opponent_safety_filter and int(safe_counts[4]) == 0
+            else set()
+        )
+        # Nearby ready enemy makes our bomb escape less reliable
+        nearby_bomb_ready_enemy = self.use_opponent_safety_filter and any(
+            bool(enemy[2])
+            and abs(enemy[-1][0] - position[0])
+            + abs(enemy[-1][1] - position[1])
+            <= TWO_STEP_THREAT_RADIUS
+            for enemy in game_state["others"]
+        )
+        # Final actions allowed for DQN
+        valid = safety_filter(
+            enabled=self.use_opponent_safety_filter,
+            physical_valid=physical_valid,
+            safe_counts=safe_counts,
+            survival_steps=survival_steps,
+            immediate_safe=immediate_safe,
+            bomb_escape_options=float(bomb[0]),
+            enemy_forced_death=enemy_forced_death,
+            action_positions=action_positions,
+            enemy_destinations=enemy_destinations,
+            pessimistic_bomb_actions=pessimistic_robust_bomb_actions,
+            nearby_bomb_ready_enemy=nearby_bomb_ready_enemy,
+        )
+        # Give worst-case safety to DQN too
         pessimistic_safe_space = np.minimum(
             pessimistic_safe_counts,
             SAFE_SPACE_CLIP,
@@ -1201,10 +1124,12 @@ class Feature:
             np.asarray([pessimistic_bomb_escape], dtype=np.float32),
         ])
 
+        # Directional features use physical moves
+        # OASF should not erase information from DQN
         action_positions = self._action_positions(position)
-        # Directional deltas describe physical consequences. Do not erase
-        # them merely because the separate safety shield rejects an action.
         physical_movement = physical_valid[:5]
+
+        # Progress after every move or WAIT
         coin_delta = self._distance_deltas(
             coin_distance, action_positions, physical_movement
         )
@@ -1221,6 +1146,7 @@ class Feature:
         enemy_delta = self._distance_deltas(
             enemy_distance, action_positions, physical_movement
         )
+        # Can we reach the coin before an enemy
         coin_contest = self._coin_contest(
             field,
             game_state["coins"],
@@ -1229,8 +1155,10 @@ class Feature:
             action_positions,
             physical_movement,
         )
+        # Short movement memory
         recent_visit, motion_history = self._temporal_features(position)
 
+        # Keep score of dead opponents too
         own_score = float(game_state["self"][1])
         strongest_opponent = max(
             self._max_observed_opponent_score,
@@ -1240,6 +1168,7 @@ class Feature:
             ),
         )
         score_margin = own_score - strongest_opponent
+        # Put every feature group together
         feature = {
             "tiles": self._tile_features(game_state),
             "valid": valid,
@@ -1255,23 +1184,31 @@ class Feature:
             "bomb": bomb,
             "global": np.asarray(
                 [
+                    # Coin distance
                     self._normalized_distance(coin_distance, position),
+                    # Useful crate distance
                     self._normalized_distance(crate_distance, position),
+                    # Enemy distance
                     self._normalized_distance(enemy_distance, position),
+                    # Enemies still alive
                     min(
                         len(game_state["others"]) / max(1, s.MAX_AGENTS - 1),
                         1.0,
                     ),
+                    # Time left
                     max(
                         0.0,
                         1.0 - game_state["step"] / max(1, s.MAX_STEPS),
                     ),
+                    # Lead over strongest opponent
                     np.clip(
                         score_margin / SCORE_SCALE,
                         -1.0,
                         1.0,
                     ),
+                    # Coins still not collected
                     remaining_coin_fraction,
+                    # Any visible coin
                     float(bool(game_state["coins"])),
                 ],
                 dtype=np.float32,
@@ -1280,6 +1217,7 @@ class Feature:
             "motion_history": motion_history,
         }
 
+        # Save because training asks for same state more than once
         self._cache_key = cache_key
         self._cache_value = feature
         return feature

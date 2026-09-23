@@ -1,61 +1,22 @@
 # RivalGuard DQN
 
 `RivalGuard DQN` is a dueling Double DQN agent for the classic Bomberman scenario.
-It uses a learned policy together with an Opponent-Aware Safety Filter (OASF).
+It uses a learned policy together with an Opponent-Aware Safety Filter.
 
 ## Method
 
-The policy uses 108 input features. They describe:
-
-- nearby tiles and valid actions;
-- bombs, explosions and possible escape routes;
-- coins, crates and expected crate value;
-- opponents and coin competition;
-- recent movement and the current game state.
+We use 108 input features.
 
 The neural network has a shared `128 -> 64 -> 32` body, followed by separate
 value and advantage heads. Training uses Double DQN, five-step returns, a
 target network and D4 board-symmetry augmentation.
 
-OASF removes actions that are invalid or have no simulated escape route. It
-also checks whether an opponent could block an important first move. OASF is
-automatically disabled during training and enabled during evaluation and normal
-play. No environment variable is needed to control it.
-
-## Files
-
-- `callbacks.py`: loads the model and selects actions.
-- `feature.py`: builds the 108 features and applies OASF.
-- `model.py`: defines and loads the neural network.
-- `symmetry.py`: contains board transformations used in training.
-- `train.py`: contains the training and replay logic.
-- `model.pt`: contains the final trained policy.
-
-## Run one game
-
-Run this command from the project root:
-
-```bash
-python main.py play \
-  --agents rivalguarddqn rule_based_agent rule_based_agent rule_based_agent \
-  --scenario classic \
-  --n-rounds 1
-```
+We use OASF to remove actions that are invalid or have no simulated escape route. It could
+also checks whether an opponent could block an important first move. OASF is turn off during training and turn on during evaluation and normal play.
 
 ## Evaluation
 
-```bash
-python evaluate_agents.py \
-  --agent rivalguarddqn \
-  --opponents rule_based_agent rule_based_agent rule_based_agent \
-  --scenario classic \
-  --rounds 100 \
-  --runs 3 \
-  --seed 40000 \
-  --output results/eval_rivalguarddqn_r100x3_seed40000.json
-```
-
-The saved model produced the following result in this evaluation:
+The saved model produced the following result in evaluation:
 
 | Agent | Win rate | Average score |
 | --- | ---: | ---: |
@@ -64,21 +25,30 @@ The saved model produced the following result in this evaluation:
 | rule_based_agent_1 | 0.1933 | 2.6567 +/- 0.0987 |
 | rule_based_agent_2 | 0.2233 | 2.8600 +/- 0.0436 |
 
-The win rate counts both outright wins and ties for first place. Scores show
-the mean and standard deviation over three runs. The game is stochastic, so a
-new evaluation may give a different result.
+The win rate counts both outright wins and ties for first place. Scores show the mean and standard deviation over three runs.
 
-## Curriculum training
+## Curriculum learning
 
-Training is optional. The default curriculum is the `advanced` curriculum used
-for the final model. Three `curriculum_agent` opponents independently sample a
-new policy at the start of each round.
+Exploration and learning rate restart at a smaller value for every new stage:
 
-`MY_AGENT_STAGE` controls both the learner and the curriculum opponents. The
-share of stronger `bomber` and `rule` opponents is 40% in P2, 70% in P3 and
-90% in P4.
+| Stage | Epsilon | Learning rate |
+| --- | --- | --- |
+| P1 | 1.00 -> 0.05 | 2e-4 -> 3e-5 |
+| P2 | 0.20 -> 0.05 | 2e-5 -> 8e-6 |
+| P3 | 0.10 -> 0.03 | 1e-5 -> 4e-6 |
+| P4 | 0.06 -> 0.02 | 5e-6 -> 2e-6 |
 
-Start P1 from a new model:
+The schedule continues from its saved position when the same stage is resumed.
+It starts from the new stage's initial values when `MY_AGENT_STAGE` changes.
+
+The opponent mix follows the Agent8 advanced curriculum:
+
+| Stage | Curriculum mix |
+| --- | --- |
+| P1 | 35% static, 35% peaceful, 20% evasive, 8% random, 2% coin collector |
+| P2 | 4% static, 4% peaceful, 42% evasive, 10% random, 25% coin collector, 15% rule |
+| P3 | 2% static, 3% peaceful, 15% evasive, 10% random, 40% coin collector, 30% rule |
+| P4 | 7% evasive, 3% random, 20% coin collector, 70% rule |
 
 ```bash
 MY_AGENT_STAGE=P1 \
@@ -91,8 +61,6 @@ python main.py play --no-gui \
   --n-rounds 600
 ```
 
-Continue with P2:
-
 ```bash
 MY_AGENT_STAGE=P2 \
 MY_AGENT_CURRICULUM_SEED=12000 \
@@ -103,8 +71,6 @@ python main.py play --no-gui \
   --n-rounds 400
 ```
 
-Continue with P3 and P4 in the same way:
-
 ```bash
 MY_AGENT_STAGE=P3 \
 MY_AGENT_CURRICULUM_SEED=13000 \
@@ -113,7 +79,9 @@ python main.py play --no-gui \
   --train 1 \
   --scenario classic \
   --n-rounds 400
+```
 
+```bash
 MY_AGENT_STAGE=P4 \
 MY_AGENT_CURRICULUM_SEED=14000 \
 python main.py play --no-gui \
@@ -122,16 +90,3 @@ python main.py play --no-gui \
   --scenario classic \
   --n-rounds 400
 ```
-
-Only P1 should use `MY_AGENT_FRESH=1`. Later stages start from the previous
-stage's best `model.pt`.
-
-During training, `training_state.pt` stores the latest policy and a compressed
-replay reservoir with at most 6,000 transitions. In later stages, 25% of each
-training batch comes from this older experience. This helps retain earlier
-skills.
-
-The agent checks its rolling performance over 100 rounds. When the current
-stage improves, its best policy is saved directly to `model.pt`.
-`training_state.pt` is only needed for training and is not required for the
-final submission.

@@ -9,10 +9,12 @@ FEATURE_VERSION = 16
 
 
 class DQN(nn.Module):
-    """Dueling Q network that learns the complete task action value."""
+    """Estimate a Q value for each action."""
 
     def __init__(self, n_observations, n_actions):
+        # Build the shared layers and the two Dueling-DQN heads
         super().__init__()
+        # Shared feature layers
         self.trunk = nn.Sequential(
             nn.Linear(n_observations, 128),
             nn.LayerNorm(128),
@@ -24,14 +26,17 @@ class DQN(nn.Module):
             nn.LayerNorm(32),
             nn.ReLU(),
         )
+        # How good this state is
         self.value_head = nn.Sequential(
             nn.Linear(32, 16), nn.ReLU(), nn.Linear(16, 1)
         )
+        # How good each action is
         self.advantage_head = nn.Sequential(
             nn.Linear(32, 16), nn.ReLU(), nn.Linear(16, n_actions)
         )
 
     def forward(self, x):
+        # Return one Q value for each action
         features = self.trunk(x)
         value = self.value_head(features)
         advantage = self.advantage_head(features)
@@ -42,7 +47,7 @@ def save_model(
     path: Path,
     policy_net: DQN,
 ) -> None:
-    """Save the trained policy in the format used by this agent."""
+    # Save on CPU so model is easy to move
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -60,11 +65,9 @@ def save_model(
 
 
 def _torch_load(path: Path):
-    """Load on CPU so replay tensors never become device-backed views."""
-    try:
-        return torch.load(path, map_location="cpu", weights_only=False)
-    except TypeError:
-        return torch.load(path, map_location="cpu")
+    # Load a model on the CPU
+    return torch.load(path, map_location="cpu", weights_only=False)
+
 
 
 def load_model(
@@ -73,7 +76,8 @@ def load_model(
     n_observations: int,
     n_actions: int,
 ) -> DQN:
-    """Load a native Feature V16 model without legacy migration."""
+    # Load a model and check that its format still matches this agent
+    # Check file type and version first
     payload = _torch_load(Path(path))
     if not isinstance(payload, dict) or "policy_state_dict" not in payload:
         raise ValueError(f"{path} is not a RivalGuard DQN model file.")
@@ -90,6 +94,7 @@ def load_model(
             f"RivalGuard DQN requires Feature V{FEATURE_VERSION}."
         )
 
+    # Input size must match our 108 features
     policy_state = dict(payload["policy_state_dict"])
     model_width = int(policy_state["trunk.0.weight"].shape[1])
     if model_width != n_observations:
